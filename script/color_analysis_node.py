@@ -97,12 +97,10 @@ class color_analysis_node:
 	# Image information callback
 	def cbInfo(self):
 
-		print('center of fruit:{},{}'.format(dX,dY))
-	cv2.putText(self.cv_image, direction, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-	  0.65, (255, 255, 255), 1)
-	cv2.putText(self.cv_image, "dx: {}, dy: {}".format(dX, dY),
-	  (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX,
-	  0.65, (255, 255, 255), 1)
+		print('center of fruit:{},{}'.format(dX,dY)) 
+		cv2.putText(self.cv_image, direction, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 1)
+		cv2.putText(self.cv_image, "dx: {}, dy: {}".format(dX, dY), (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX,
+			0.65, (255, 255, 255), 1)
 		# fontFace = cv2.FONT_HERSHEY_DUPLEX
 		# fontScale = 0.5
 		# color = (255, 255, 255)
