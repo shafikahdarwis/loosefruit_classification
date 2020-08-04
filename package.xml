@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>loosefruit_detection</name>
+  <name>loosefruit_classification</name>
   <version>0.0.0</version>
-  <description>The loosefruit_detection package</description>
+  <description>The loosefruit_classification package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
