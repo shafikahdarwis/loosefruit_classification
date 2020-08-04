@@ -42,6 +42,8 @@ class color_analysis_node:
         	self.upper_red = (10, 255, 255)
         	self.lowerRed = (170, 120, 70)
         	self.upperRed = (180, 255, 255)
+        	
+        	self.counter = 0
 
 		self.pts = deque(maxlen=buffer)
 		self.buffer = buffer
@@ -97,9 +99,9 @@ class color_analysis_node:
 	# Image information callback
 	def cbInfo(self):
 
-		print('center of fruit:{},{}'.format(dX,dY)) 
+		print('center of fruit:{},{}'.format(self.dX,self.dY)) 
 		cv2.putText(self.cv_image, direction, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 1)
-		cv2.putText(self.cv_image, "dx: {}, dy: {}".format(dX, dY), (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX,
+		cv2.putText(self.cv_image, "dx: {}, dy: {}".format(self.dX, self.dY), (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX,
 			0.65, (255, 255, 255), 1)
 		# fontFace = cv2.FONT_HERSHEY_DUPLEX
 		# fontScale = 0.5
@@ -127,8 +129,8 @@ class color_analysis_node:
 			# color space
 			frame = imutils.resize(self.cv_image, width=self.imgWidth)
 			# blurred = cv2.GaussianBlur(self.cv_image, (11, 11), 0)
-			gray= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-			hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+			gray= cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2GRAY)
+			hsv = cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2HSV)
 
 			# construct a mask for the color "green", then perform
 			# a series of dilations and erosions to remove any small
@@ -173,38 +175,40 @@ class color_analysis_node:
 				if self.pts[i - 1] is None or self.pts[i] is None:
 					continue
 
-				if counter >= 10 and i == 1 and pts[-10] is not None:
+				if self.counter >= 10 and i == 1 and self.pts[10] is not None:
 		  			# compute the difference between the x and y
 		  			# coordinates and re-initialize the direction
 		  			# text variables
-		  			dX = self.pts[-10][0] - self.pts[i][0]
-		  			dY = self.pts[-10][1] - self.pts[i][1]
-		  			(dirX, dirY) = ("", "")
+		  			self.dX = self.pts[-10][0] - self.pts[i][0]
+		  			self.dY = self.pts[-10][1] - self.pts[i][1]
+		  			(self.dirX, self.dirY) = ("", "")
 
 		  			# ensure there is significant movement in the
 		  			# x-direction
-		  			if np.abs(dX) > 20:
-		  				dirX = "East" if np.sign(dX) == 1 else "West"
+		  			if np.abs(self.dX) > 20:
+		  				self.dirX = "East" if np.sign(self.dX) == 1 else "West"
 
 		  			# ensure there is significant movement in the
 		  			# y-direction
-		  			if np.abs(dY) > 20:
-		  				dirY = "North" if np.sign(dY) == 1 else "South"
+		  			if np.abs(self.dY) > 20:
+		  				self.dirY = "North" if np.sign(self.dY) == 1 else "South"
 
 		  			# handle when both directions are non-empty
-		  			if dirX != "" and dirY != "":
-		  				direction = "{}-{}".format(dirY, dirX)
+		  			if self.dirX != "" and self.dirY != "":
+		  				self.direction = "{}-{}".format(self.dirY, self.dirX)
 
 		  			# otherwise, only one direction is non-empty
 		  			else:
-		  				direction = dirX if dirX != "" else dirY
+		  				self.direction = self.dirX if self.dirX != "" else self.dirY
 
 				# otherwise, compute the thickness of the line and
 				# draw the connecting lines
 				thickness = int(np.sqrt(self.buffer / float(i + 1)) * 2.5)
 				cv2.line(self.cv_image, self.pts[i - 1], self.pts[i], (0, 0, 255), 					thickness)
 
-			self.cbInfo()
+				self.cbInfo()
+			self.counter +=1
+				
 			self.cbShowImage()
 
 			# Allow up to one second to connection
