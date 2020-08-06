@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-#Title: Python Subscriber for Tank Navigation
-#Author: Khairul Izwan Bin Kamsani - [23-01-2020]
-#Description: Tank Navigation Subcriber Nodes (Python)
+#Title: Python Subscriber for loosefruit recognition
+#Author: Nurshafikah Darwis ---[6/8/2020]
+#Description: loosefruit_oil_palm_detection(node) python
 
 from __future__ import print_function
 from __future__ import division
@@ -31,7 +31,7 @@ from cv_bridge import CvBridge
 from cv_bridge import CvBridgeError
 
 
-#from sensor_msgs.msg import RegionOfInterest
+from sensor_msgs.msg import RegionOfInterest
 
 from common_tracking_application.objcenter import objCenter
 from common_face_application.msg import objCenter as objCoord
@@ -44,7 +44,7 @@ class oil_palm_node:
 
 		self.bridge = CvBridge()
 		self.rospack = rospkg.RosPack()
-#		self.roi = RegionOfInterest()
+		self.roi = RegionOfInterest()
 		self.objectCoord = objCoord()
 
 		# define the lower and upper boundaries of the "red"
@@ -78,9 +78,9 @@ class oil_palm_node:
 		self.cameraInfo_sub = rospy.Subscriber(cameraInfo_topic, CameraInfo,
 			self.cbCameraInfo)
 
-		# Publish to RegionOfInterest msg
-#		roi_topic = "/fruitROI"
-#		self.roi_pub = rospy.Publisher(roi_topic, RegionOfInterest, queue_size=10)
+		#Publish to RegionOfInterest msg
+		roi_topic = "/fruitROI"
+		self.roi_pub = rospy.Publisher(roi_topic, RegionOfInterest, queue_size=10)
 
 			
 		# Publish to objCenter msg
@@ -158,7 +158,7 @@ class oil_palm_node:
 			((self.objX, self.objY), rect) = objectLoc
 
 
-			self.pubObjCoord()
+#			self.pubObjCoord()
 
 			# only proceed if at least one contour was found
 			if len(cnts) > 0:
@@ -186,6 +186,9 @@ class oil_palm_node:
 					cv2.rectangle(self.cv_image, (int(self.x), int(self.y)),
 					(int(self.x)+int(self.w),int(self.y)+int(self.h)),(255, 255, 255), 2)
 					cv2.putText(self.cv_image, label, (int(self.x),int(self.y)-10), 				cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)
+					
+				if fruit==True :
+#					self.pubRegionofInterest()
 					self.pubObjCoord()
 
 
@@ -197,14 +200,14 @@ class oil_palm_node:
 			rospy.logerr("No images recieved")
 
 #	 Publish to RegionOfInterest msg
-#	def pubRegionofInterest(self):
+	def pubRegionofInterest(self):
 
-#		self.roi.x_offset = self.x
-#		self.roi.y_offset = self.y
-#		self.roi.width = self.x + self.w
-#		self.roi.height = self.y + self.h
+		self.roi.x_offset = self.x
+		self.roi.y_offset = self.y
+		self.roi.width = self.x + self.w
+		self.roi.height = self.y + self.h
 
-#		self.roi_pub.publish(self.roi)
+		self.roi_pub.publish(self.roi)
 #	
 	def pubObjCoord(self):
 
