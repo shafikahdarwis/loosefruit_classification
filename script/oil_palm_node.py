@@ -70,11 +70,11 @@ class oil_palm_node:
 		self.model = load_model(self.lenet_filename)
 
 		# Subscribe to Image msg
-		image_topic = "/cv_camera/image_raw"
+		image_topic = "/cv_camera_robot1/image_raw"
 		self.image_sub = rospy.Subscriber(image_topic, Image, self.cbImage)
 
 		# Subscribe to CameraInfo msg
-		cameraInfo_topic = "/cv_camera/camera_info"
+		cameraInfo_topic = "/cv_camera_robot1/camera_info"
 		self.cameraInfo_sub = rospy.Subscriber(cameraInfo_topic, CameraInfo,
 			self.cbCameraInfo)
 
@@ -195,7 +195,7 @@ class oil_palm_node:
 			self.cbShowImage()
 
 			# Allow up to one second to connection
-			rospy.sleep(0.01)
+			rospy.sleep(0.1)
 		else:
 			rospy.logerr("No images recieved")
 
