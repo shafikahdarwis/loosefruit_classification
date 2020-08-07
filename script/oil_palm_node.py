@@ -176,16 +176,20 @@ class oil_palm_node:
          			roi = np.expand_dims(roi, axis=0)
 				
 				(notFruit, fruit) = self.model.predict(roi)[0]
-         			label = "Fruit" if fruit > notFruit else "Not fruit"
+#				rospy.loginfo(self.model.predict(roi)[0][1])
+         			label = "Fruit" if (fruit > notFruit) and fruit > 0.5 else "Not fruit"
 
 					
 				# only proceed if the radius meets a minimum size
 				if radius > 10:
 					# draw the circle and centroid on the frame,
 					# then update the list of tracked points
-					cv2.rectangle(self.cv_image, (int(self.x), int(self.y)),
-					(int(self.x)+int(self.w),int(self.y)+int(self.h)),(255, 255, 255), 2)
-					cv2.putText(self.cv_image, label, (int(self.x),int(self.y)-10), 				cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)
+					cv2.rectangle(self.cv_image, (int(self.x), int(self.y)), 
+						(int(self.x)+int(self.w),int(self.y)+int(self.h)),(255, 255, 255), 2)
+					cv2.putText(self.cv_image, label, (int(self.x),int(self.y)-10),	
+						cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)
+					cv2.putText(self.cv_image, "%.2f" % (self.model.predict(roi)[0][1]), 
+						(int(self.x),int(self.y)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 2)
 					
 				if fruit==True :
 #					self.pubRegionofInterest()
