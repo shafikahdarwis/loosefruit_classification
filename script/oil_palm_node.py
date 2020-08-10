@@ -66,7 +66,7 @@ class oil_palm_node:
 		# import lenet files
 		self.p = os.path.sep.join([self.rospack.get_path('loosefruit_classification')])
 		self.libraryDir = os.path.join(self.p, "model")
-		self.lenet_filename = self.libraryDir + "/lenet_sawit13.hdf5"
+		self.lenet_filename = self.libraryDir + "/lenet_sawit10.hdf5"
 		self.model = load_model(self.lenet_filename)
 
 		# Subscribe to Image msg
