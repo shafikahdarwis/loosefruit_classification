@@ -66,20 +66,20 @@ class oil_palm_node:
 		# import lenet files
 		self.p = os.path.sep.join([self.rospack.get_path('loosefruit_classification')])
 		self.libraryDir = os.path.join(self.p, "model")
-		self.lenet_filename = self.libraryDir + "/lenet_sawit4.hdf5"
+		self.lenet_filename = self.libraryDir + "/lenet_sawit13.hdf5"
 		self.model = load_model(self.lenet_filename)
 
 		# Subscribe to Image msg
-		image_topic = "/cv_camera_robot1/image_raw"
+		image_topic = "/cv_camera/image_raw"
 		self.image_sub = rospy.Subscriber(image_topic, Image, self.cbImage)
 
 		# Subscribe to CameraInfo msg
-		cameraInfo_topic = "/cv_camera_robot1/camera_info"
+		cameraInfo_topic = "/cv_camera/camera_info"
 		self.cameraInfo_sub = rospy.Subscriber(cameraInfo_topic, CameraInfo,
 			self.cbCameraInfo)
 
 		#Publish to RegionOfInterest msg
-		roi_topic = "/fruitROI"
+		roi_topic = "/fruitROI_robot1"
 		self.roi_pub = rospy.Publisher(roi_topic, RegionOfInterest, queue_size=10)
 
 			
@@ -175,9 +175,9 @@ class oil_palm_node:
 	 			roi = roi.astype("float") / 255.0
          			roi = np.expand_dims(roi, axis=0)
 				
-				(notFruit, fruit) = self.model.predict(roi)[0]
+				(fruit, notFruit) = self.model.predict(roi)[0]
 #				rospy.loginfo(self.model.predict(roi)[0][1])
-         			label = "Fruit" if (fruit > notFruit) and fruit > 0.5 else "Not fruit"
+         			label = "Fruit" if (fruit > notFruit) and fruit > 0.8 else "Not fruit"
 
 					
 				# only proceed if the radius meets a minimum size
@@ -188,10 +188,10 @@ class oil_palm_node:
 						(int(self.x)+int(self.w),int(self.y)+int(self.h)),(255, 255, 255), 2)
 					cv2.putText(self.cv_image, label, (int(self.x),int(self.y)-10),	
 						cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)
-					cv2.putText(self.cv_image, "%.2f" % (self.model.predict(roi)[0][1]), 
-						(int(self.x),int(self.y)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 2)
+#					cv2.putText(self.cv_image, "%.2f" % (self.model.predict(roi)[0][0]), 
+#						(int(self.x),int(self.y)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 2)
 					
-				if fruit==True :
+				if label == "Fruit" :
 #					self.pubRegionofInterest()
 					self.pubObjCoord()
 
@@ -199,7 +199,7 @@ class oil_palm_node:
 			self.cbShowImage()
 
 			# Allow up to one second to connection
-			rospy.sleep(0.1)
+			rospy.sleep(0.01)
 		else:
 			rospy.logerr("No images recieved")
 
