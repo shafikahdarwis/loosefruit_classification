@@ -30,22 +30,21 @@ from sensor_msgs.msg import CameraInfo
 from cv_bridge import CvBridge
 from cv_bridge import CvBridgeError
 
-
-from sensor_msgs.msg import RegionOfInterest
+from geometry_msgs.msg import Twist
 
 from common_tracking_application.objcenter import objCenter
 from common_face_application.msg import objCenter as objCoord
 
 class oil_palm_node:
 
-	def __init__(self,buffer=16):
+	def __init__(self):
 
 		rospy.logwarn("deep learning (ROI) node [ONLINE]")
 
 		self.bridge = CvBridge()
 		self.rospack = rospkg.RosPack()
-		self.roi = RegionOfInterest()
 		self.objectCoord = objCoord()
+		self.move = Twist()
 
 		# define the lower and upper boundaries of the "red"
 		# fruit in the HSV color space, then initialize the
@@ -55,9 +54,6 @@ class oil_palm_node:
         	self.lowerRed = (170, 120, 70)
         	self.upperRed = (180, 255, 255)
 
-		self.pts = deque(maxlen=buffer)
-		self.buffer = buffer
-
 		self.image_recieved = False
 
 		# rospy shutdown
@@ -66,7 +62,7 @@ class oil_palm_node:
 		# import lenet files
 		self.p = os.path.sep.join([self.rospack.get_path('loosefruit_classification')])
 		self.libraryDir = os.path.join(self.p, "model")
-		self.lenet_filename = self.libraryDir + "/lenet_sawit10.hdf5"
+		self.lenet_filename = self.libraryDir + "/lenet_sawit4.hdf5"
 		self.model = load_model(self.lenet_filename)
 
 		# Subscribe to Image msg
@@ -77,16 +73,14 @@ class oil_palm_node:
 		cameraInfo_topic = "/cv_camera/camera_info"
 		self.cameraInfo_sub = rospy.Subscriber(cameraInfo_topic, CameraInfo,
 			self.cbCameraInfo)
-
-		#Publish to RegionOfInterest msg
-		roi_topic = "/fruitROI_robot1"
-		self.roi_pub = rospy.Publisher(roi_topic, RegionOfInterest, queue_size=10)
-
 			
 		# Publish to objCenter msg
 		objCoord_topic = "/objCoord_robot1"
 		self.objCoord_pub = rospy.Publisher(objCoord_topic, objCoord, queue_size=10)
 
+		# Publish to twist msg
+		twist_topic = "/cmd_vel"
+		self.twist_pub = rospy.Publisher(twist_topic, Twist, queue_size=10)
 
 		# Allow up to one second to connection
 		rospy.sleep(1)
@@ -115,7 +109,6 @@ class oil_palm_node:
 
 		# calculate the center of the frame as this is where we will
 		# try to keep the object
-
 		self.centerX = self.imgWidth // 2
 		self.centerY = self.imgHeight // 2
 
@@ -132,7 +125,7 @@ class oil_palm_node:
 
 			# resize the frame, blur it, and convert it to the HSV
 			# color space
-			frame = imutils.resize(self.cv_image, width=self.imgWidth)
+#			frame = imutils.resize(self.cv_image, width=self.imgWidth)
 			# blurred = cv2.GaussianBlur(self.cv_image, (11, 11), 0)
 			gray= cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2GRAY)
 			hsv = cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2HSV)
@@ -151,14 +144,11 @@ class oil_palm_node:
 			cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
 				cv2.CHAIN_APPROX_SIMPLE)
 			cnts = imutils.grab_contours(cnts)
-			center = None
+#			center = None
 			
 			# only proceed if at least one contour was found
 			objectLoc = objCenter(cnts, (self.centerX, self.centerY))
 			((self.objX, self.objY), rect) = objectLoc
-
-
-#			self.pubObjCoord()
 
 			# only proceed if at least one contour was found
 			if len(cnts) > 0:
@@ -176,43 +166,52 @@ class oil_palm_node:
          			roi = np.expand_dims(roi, axis=0)
 				
 				(fruit, notFruit) = self.model.predict(roi)[0]
-#				rospy.loginfo(self.model.predict(roi)[0][1])
          			label = "Fruit" if (fruit > notFruit) and fruit > 0.8 else "Not fruit"
 
 					
 				# only proceed if the radius meets a minimum size
-				if radius > 10:
+				if radius > 10 and label == "Fruit":
+					errDC = self.centerY - self.objY
+		
+					if (errDC>0) :
+						self.move.linear.x = 0.05
+						self.move.linear.y = 0.00
+						self.move.linear.z = 0.00
+			
+						self.move.angular.x = 0.00
+						self.move.angular.y = 0.00
+						self.move.angular.z = 0.00
+			
+						self.twist_pub.publish(self.move)
+			
+			
+					else :
+						self.move.linear.x = 0.00
+						self.move.linear.y = 0.00
+						self.move.linear.z = 0.00
+			
+						self.move.angular.x = 0.00
+						self.move.angular.y = 0.00
+						self.move.angular.z = 0.00
+			
+						self.twist_pub.publish(self.move)
+				
 					# draw the circle and centroid on the frame,
 					# then update the list of tracked points
 					cv2.rectangle(self.cv_image, (int(self.x), int(self.y)), 
 						(int(self.x)+int(self.w),int(self.y)+int(self.h)),(255, 255, 255), 2)
 					cv2.putText(self.cv_image, label, (int(self.x),int(self.y)-10),	
 						cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)
-#					cv2.putText(self.cv_image, "%.2f" % (self.model.predict(roi)[0][0]), 
-#						(int(self.x),int(self.y)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 2)
-					
-				if label == "Fruit" :
-#					self.pubRegionofInterest()
+
 					self.pubObjCoord()
+					
+					# TODO
 
 
 			self.cbShowImage()
-
-			# Allow up to one second to connection
-			rospy.sleep(0.01)
 		else:
 			rospy.logerr("No images recieved")
-
-#	 Publish to RegionOfInterest msg
-	def pubRegionofInterest(self):
-
-		self.roi.x_offset = self.x
-		self.roi.y_offset = self.y
-		self.roi.width = self.x + self.w
-		self.roi.height = self.y + self.h
-
-		self.roi_pub.publish(self.roi)
-#	
+	
 	def pubObjCoord(self):
 
 		self.objectCoord.centerX = self.objX
@@ -226,6 +225,16 @@ class oil_palm_node:
 		try:
 			rospy.logwarn("oil palm (ROI) node [OFFLINE]")
 		finally:
+			self.move.linear.x = 0
+			self.move.linear.y = 0
+			self.move.linear.z = 0
+			
+			self.move.angular.x = 0
+			self.move.angular.y = 0
+			self.move.angular.z = 0
+			
+			self.twist_pub.publish(self.move)
+			
 			cv2.destroyAllWindows()
 
 if __name__ == '__main__':
