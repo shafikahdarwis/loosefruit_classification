@@ -39,7 +39,7 @@ class oil_palm_node:
 
 	def __init__(self):
 
-		rospy.logwarn("[Robot1] Loose Fruit Detection node [ONLINE]")
+		rospy.logwarn("[Robot2] Loose Fruit Detection node [ONLINE]")
 
 		self.bridge = CvBridge()
 		self.rospack = rospkg.RosPack()
@@ -66,20 +66,20 @@ class oil_palm_node:
 		self.model = load_model(self.lenet_filename)
 
 		# Subscribe to Image msg
-		image_topic = "/cv_camera_robot1/image_raw"
+		image_topic = "/cv_camera_robot2/image_raw"
 		self.image_sub = rospy.Subscriber(image_topic, Image, self.cbImage)
 
 		# Subscribe to CameraInfo msg
-		cameraInfo_topic = "/cv_camera_robot1/camera_info"
+		cameraInfo_topic = "/cv_camera_robot2/camera_info"
 		self.cameraInfo_sub = rospy.Subscriber(cameraInfo_topic, CameraInfo,
 			self.cbCameraInfo)
 			
 		# Publish to objCenter msg
-		objCoord_topic = "/objCoord_robot1"
+		objCoord_topic = "/objCoord_robot2"
 		self.objCoord_pub = rospy.Publisher(objCoord_topic, objCoord, queue_size=10)
 
 		# Publish to twist msg
-		twist_topic = "/cmd_vel_robot1"
+		twist_topic = "/cmd_vel_robot2"
 		self.twist_pub = rospy.Publisher(twist_topic, Twist, queue_size=10)
 
 		# Allow up to one second to connection
@@ -110,12 +110,12 @@ class oil_palm_node:
 		# calculate the center of the frame as this is where we will
 		# try to keep the object
 		self.centerX = self.imgWidth // 2
-		self.centerY = self.imgHeight // 2
+		self.centerY = 3 * (self.imgHeight // 4)
 
 	# Show the output frame
 	def cbShowImage(self):
 
-		cv2.imshow("[Robot1] Loose Fruit Detection", self.cv_image)
+		cv2.imshow("[Robot2] Loose Fruit Detection", self.cv_image)
 		cv2.waitKey(1)
 
 	# Detect the fruit(s)
@@ -247,7 +247,7 @@ class oil_palm_node:
 	# rospy shutdown callback
 	def cbShutdown(self):
 		try:
-			rospy.logwarn("[Robot1] Loose Fruit Detection node  [OFFLINE]")
+			rospy.logwarn("[Robot2] Loose Fruit Detection node  [OFFLINE]")
 		finally:
 			cv2.destroyAllWindows()
 			self.pubStop()
@@ -255,7 +255,7 @@ class oil_palm_node:
 if __name__ == '__main__':
 
 	# Initializing your ROS Node
-	rospy.init_node('robot1_loose_fruit_detection', anonymous=False)
+	rospy.init_node('robot2_loose_fruit_detection', anonymous=False)
 	oil_palm = oil_palm_node()
 
 	# Camera preview
