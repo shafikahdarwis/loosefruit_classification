@@ -49,7 +49,8 @@ class oil_palm_node:
 		# define the lower and upper boundaries of the "red"
 		# fruit in the HSV color space, then initialize the
 		# list of tracked points
-		self.lower_red = (0, 120, 70)
+		self.lower_red = (0, 70, 70)
+#		self.lower_red = (0, 120, 70)
         	self.upper_red = (10, 255, 255)
         	self.lowerRed = (170, 120, 70)
         	self.upperRed = (180, 255, 255)
