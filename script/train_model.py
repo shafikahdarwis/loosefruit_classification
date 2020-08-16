@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.utils import to_categorical
-from dl4cv_pyimagesearch_nn_conv.minivggnet import MiniVGGNet
+from dl4cv_pyimagesearch_nn_conv.lenet import LeNet
 from imutils import paths
 import matplotlib.pyplot as plt
 import numpy as np
@@ -71,7 +71,7 @@ classWeight = classTotals.max() / classTotals
 
 # initialize the model
 print("[INFO] compiling model...")
-model = MiniVGGNet.build(width=28, height=28, depth=1, classes=2)
+model = LeNet.build(width=28, height=28, depth=1, classes=2)
 model.compile(loss="binary_crossentropy", optimizer="adam",
 	metrics=["accuracy"])
 
